@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   id="svg3732"
+   xml:space="preserve"
+   width="170.66667"
+   height="178.66667"
+   viewBox="0 0 170.66667 178.66667"
+   sodipodi:docname="twitch-yellow.svg"
+   inkscape:version="0.92.2 2405546, 2018-03-11"><metadata
+     id="metadata3738"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
+     id="defs3736" /><sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="949"
+     inkscape:window-height="1018"
+     id="namedview3734"
+     showgrid="false"
+     inkscape:zoom="3.1364052"
+     inkscape:cx="66.343437"
+     inkscape:cy="89.277208"
+     inkscape:window-x="1926"
+     inkscape:window-y="54"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g3742" /><g
+     id="g3740"
+     inkscape:groupmode="layer"
+     inkscape:label="ink_ext_XXXXXX"
+     transform="matrix(1.3333333,0,0,-1.3333333,0,178.66667)"><g
+       id="g3742"
+       transform="scale(0.1)"
+       style="fill:#008000"><path
+         d="M 640,990 V 640.371 H 520 V 990 Z m 320,0 V 640.371 H 840 V 990 Z M 1160,580 960,380 H 640 L 470,210 V 380 H 200 v 840 h 960 z M 90,1340 0,1110 V 170 H 320 V 0 h 180 l 170,170 h 260 l 350,350 v 820 H 90"
+         style="fill:#bebebe;fill-opacity:1;fill-rule:evenodd;stroke:none"
+         id="path3744"
+         inkscape:connector-curvature="0" /></g></g></svg>

@@ -1,0 +1,68 @@
+/*  $Id$
+ *
+ *  Copyright (C) 2012 John Doo <john@foo.org>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#ifndef __SAMPLE_H__
+#define __SAMPLE_H__
+
+#define TWITCH_PURPLE "#6441a4"
+#include "twitch-api.h"
+G_BEGIN_DECLS
+
+typedef struct {
+    GtkWidget   *username;
+    GtkWidget   *client_id;
+    GtkWidget   *color_picker;
+} DialogSettings;
+/* plugin structure */
+typedef struct
+{
+    XfcePanelPlugin *plugin;
+
+    /* panel widgets */
+    GtkWidget       *ebox;
+    // GtkWidget       *grid;
+    GtkWidget       *hvbox;
+    GtkWidget       *icon;
+    GHashTable      *buttons;
+    int size;
+    
+    GtkCssProvider  *provider;
+    GdkRGBA         color;
+
+    TwitchApi       *api;
+    gboolean        init_complete;
+    DialogSettings  *settings;
+}
+TwitchPlugin;
+
+
+
+void
+twitch_plugin_save (XfcePanelPlugin *plugin,
+             TwitchPlugin    *twitch);
+
+gboolean
+twitch_plugin_update (gpointer userdata);
+
+void
+twitch_plugin_apply_settings (TwitchPlugin *twitch);
+
+G_END_DECLS
+
+#endif /* !__SAMPLE_H__ */
