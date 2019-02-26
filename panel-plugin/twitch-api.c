@@ -9,6 +9,7 @@
 #define TWITCH_API_FOLLOWING "https://api.twitch.tv/helix/users/follows"
 #define TWITCH_API_USERS "https://api.twitch.tv/helix/users"
 #define TWITCH_API_STREAMS "https://api.twitch.tv/helix/streams"
+#define TWITCH_PFP_DEFAULT "https://static-cdn.jtvnw.net/jtv_user_pictures/xarth/404_user_70x70.png"
 #define FOLLOW_SIZE api->follow_size
 typedef struct {
     char *data;
@@ -129,8 +130,8 @@ static void copy_ids(gpointer key, gpointer value, gpointer user_data) {
     *(offset) = g_stpcpy(*offset, key);
 }
 
-static void twitch_update_pfp(TwitchApi *api) {
-    json_object *data, *id, *pfp, *json;
+static void twitch_update_users(TwitchApi *api) {
+    json_object *data, *id, *pfp, *json, *login;
     id_loop loop;
     TwitchUser *user;
     gchar *url, *offset, *url_final;
@@ -150,14 +151,23 @@ static void twitch_update_pfp(TwitchApi *api) {
     for (gsize i = 0; i < json_object_array_length(data); i++) {
         json_object_object_get_ex(json_object_array_get_idx(data, i), "profile_image_url", &pfp);
         json_object_object_get_ex(json_object_array_get_idx(data, i), "id", &id);
+        json_object_object_get_ex(json_object_array_get_idx(data, i), "login", &login);
         pfp_temp = json_object_get_string(pfp);
         user = (TwitchUser*)g_hash_table_lookup(api->following, json_object_get_string(id));
-        if (g_strcmp0(pfp_temp, user->pfp_url) != 0) {
+        if (g_strcmp0(pfp_temp, "") == 0) {
+            user->pfp_url = TWITCH_PFP_DEFAULT;
+        } else if (g_strcmp0(pfp_temp, user->pfp_url) != 0) {
             if (user->pfp_url != NULL) {
                 g_free(user->pfp_url);
                 user->update_pfp = TRUE;
             }
             user->pfp_url = g_strdup(pfp_temp);
+        }
+        if (g_strcmp0(user->name, json_object_get_string(login)) != 0) {
+            if(user->name != NULL) {
+                g_free(user->name);
+            }
+            user->name = g_strdup(json_object_get_string(login));
         }
     }
     g_free(url);
@@ -237,7 +247,7 @@ int twitch_load_user (TwitchApi *api) {
         err |= twitch_init_user_id(api);
         err |= twitch_init_user_following(api);
         if (api->follow_size != 0)
-            twitch_update_pfp(api);
+            twitch_update_users(api);
         else err = 1;
     } else err = 1;
     return err;
