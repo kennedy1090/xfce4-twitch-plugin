@@ -130,8 +130,8 @@ static void copy_ids(gpointer key, gpointer value, gpointer user_data) {
     *(offset) = g_stpcpy(*offset, key);
 }
 
-static void twitch_update_users(TwitchApi *api) {
-    json_object *data, *id, *pfp, *json, *login;
+static void twitch_init_users(TwitchApi *api) {
+    json_object *json, *data, *id, *pfp, *login;
     id_loop loop;
     TwitchUser *user;
     gchar *url, *offset, *url_final;
@@ -140,7 +140,7 @@ static void twitch_update_users(TwitchApi *api) {
     url = g_strdup_printf("%s%s%lu", TWITCH_API_USERS, "?first=", FOLLOW_SIZE);
     size_total = strlen(url) + strlen(prefix) * FOLLOW_SIZE;
     g_hash_table_foreach(api->following, key_add, &size_total);
-    size_total +=  1;
+    size_total += 1;
     url_final = g_slice_alloc0(size_total);
     offset = g_stpcpy(url_final, url);
     loop.offset = &offset;
@@ -154,21 +154,12 @@ static void twitch_update_users(TwitchApi *api) {
         json_object_object_get_ex(json_object_array_get_idx(data, i), "login", &login);
         pfp_temp = json_object_get_string(pfp);
         user = (TwitchUser*)g_hash_table_lookup(api->following, json_object_get_string(id));
-        if (g_strcmp0(pfp_temp, "") == 0) {
-            user->pfp_url = TWITCH_PFP_DEFAULT;
-        } else if (g_strcmp0(pfp_temp, user->pfp_url) != 0) {
-            if (user->pfp_url != NULL) {
-                g_free(user->pfp_url);
-                user->update_pfp = TRUE;
-            }
-            user->pfp_url = g_strdup(pfp_temp);
-        }
-        if (g_strcmp0(user->name, json_object_get_string(login)) != 0) {
-            if(user->name != NULL) {
-                g_free(user->name);
-            }
-            user->name = g_strdup(json_object_get_string(login));
-        }
+        if (user->url != NULL) g_free(user->url);
+        if (user->pfp_url != NULL) g_free(user->pfp_url);
+        if (user->pfp != NULL) g_object_unref(G_OBJECT(user->pfp));
+        user->url = g_strdup(json_object_get_string(login));
+        user->pfp_url = g_str_equal(pfp_temp, "")? TWITCH_PFP_DEFAULT : g_strdup(pfp_temp);
+        user->pfp = curl_read_image(api, user->pfp_url);
     }
     g_free(url);
     g_slice_free1(size_total, url_final);
@@ -207,8 +198,6 @@ void twitch_update_status (TwitchApi *api) {
         user->live = g_str_equal(json_object_get_string(type), "live");
         if (user->live) {
             g_message("%s %s", user->name, json_object_get_string(type));
-            if (user->pfp == NULL || user->update_pfp)
-                user->pfp = curl_read_image(api, user->pfp_url);
             if (!(g_strcmp0(user->status, json_object_get_string(title)) == 0)) {
                 if (user->status != NULL) g_free(user->status);
                 user->status = g_strdup(json_object_get_string(title));
@@ -222,7 +211,7 @@ void twitch_update_status (TwitchApi *api) {
 
 void twitch_free_user(gpointer data) {
     TwitchUser *user = data;
-    if (G_LIKELY(user->pfp_url != NULL))
+    if (user->pfp_url != NULL)
         g_free(user->pfp_url);
     
     if (user->pfp != NULL)
@@ -247,7 +236,7 @@ int twitch_load_user (TwitchApi *api) {
         err |= twitch_init_user_id(api);
         err |= twitch_init_user_following(api);
         if (api->follow_size != 0)
-            twitch_update_users(api);
+            twitch_init_users(api);
         else err = 1;
     } else err = 1;
     return err;

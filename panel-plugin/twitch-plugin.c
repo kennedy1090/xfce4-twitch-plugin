@@ -332,32 +332,31 @@ static void update_button_img(TwitchPlugin *twitch, TwitchUser *user) {
   button = g_hash_table_lookup(twitch->buttons, user->id);
   gtk_button_set_image(GTK_BUTTON(button), gtk_image_new_from_pixbuf(scaled));
   g_object_unref(G_OBJECT(scaled));
-  user->update_pfp = FALSE;
 }
 
 static void add_button(TwitchPlugin *twitch, TwitchUser *user) {
-  GdkPixbuf *scaled;
-  GtkWidget *button = gtk_link_button_new(g_strconcat("https://twitch.tv/", user->name, NULL));
+  GtkWidget *button;
+  gchar *link = g_strconcat("https://twitch.tv/", user->url, NULL);
+  button = gtk_link_button_new(link);
   // g_object_ref_sink(G_OBJECT(button));
   gtk_button_set_label(GTK_BUTTON(button), NULL);
   gtk_widget_set_tooltip_text(button, user->status);
-  scaled = gdk_pixbuf_scale_simple(user->pfp, twitch->size, twitch->size, GDK_INTERP_BILINEAR);
-  gtk_button_set_image(GTK_BUTTON(button), gtk_image_new_from_pixbuf(scaled));
+  g_hash_table_insert(twitch->buttons, user->id, button);
+  update_button_img(twitch, user);
   gtk_style_context_add_provider(GTK_STYLE_CONTEXT(gtk_widget_get_style_context(button)),
                     GTK_STYLE_PROVIDER(twitch->provider),
                     GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
   gtk_box_pack_start(GTK_BOX(twitch->hvbox), button, FALSE, FALSE, 0);
                   // GET_H(twitch, len), GET_V(twitch, len), 1, 1);
-  g_hash_table_insert(twitch->buttons, user->id, button);
   gtk_widget_show(button);
-  g_object_unref(G_OBJECT(scaled));
+  g_free(link);
 }
 
 static void remove_button(TwitchPlugin *twitch, TwitchUser *user) {
   GtkWidget *button = (GtkWidget*)g_hash_table_lookup(twitch->buttons, user->id);
   g_hash_table_remove(twitch->buttons, user->id);
-  g_object_unref(G_OBJECT(button));
-  gtk_widget_hide(button);
+  // g_object_unref(G_OBJECT(button));
+  // gtk_widget_hide(button);
   gtk_container_remove(GTK_CONTAINER(twitch->hvbox), button);
 }
 
