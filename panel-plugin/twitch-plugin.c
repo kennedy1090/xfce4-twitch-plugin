@@ -34,6 +34,7 @@
 /* default settings */
 #define DEFAULT_USERNAME ""
 #define DEFAULT_ID ""
+#define DEFAULT_TOKEN ""
 
 #define IS_HORIZ(twitch) xfce_panel_plugin_get_orientation(twitch->plugin) == GTK_ORIENTATION_HORIZONTAL
 #define SIZE(twitch) xfce_panel_plugin_get_size(twitch->plugin)
@@ -93,10 +94,13 @@ twitch_plugin_save (XfcePanelPlugin *plugin,
       /* save the settings */
       DBG(".");
       if (twitch->api->user.name)
-        xfce_rc_write_entry    (rc, "twitch-username", twitch->api->user.name);
+        xfce_rc_write_entry (rc, "twitch-username", twitch->api->user.name);
 
       if(twitch->api->client_id)
         xfce_rc_write_entry (rc, "twitch-client-id", twitch->api->client_id);
+
+      if(twitch->api->access_token)
+        xfce_rc_write_entry (rc, "twitch-access-token", twitch->api->access_token);
 
       color = gdk_rgba_to_string(&twitch->color);
       xfce_rc_write_entry(rc, "twitch-logo-color", color);
@@ -135,6 +139,9 @@ twitch_plugin_read (TwitchPlugin *twitch)
           value = xfce_rc_read_entry (rc, "twitch-client-id", DEFAULT_ID);
           twitch->api->client_id = g_strdup (value);
 
+          value = xfce_rc_read_entry (rc, "twitch-access-token", DEFAULT_TOKEN);
+          twitch->api->access_token = g_strdup (value);
+
           value = xfce_rc_read_entry (rc, "twitch-logo-color", TWITCH_PURPLE);
           gdk_rgba_parse (&twitch->color, value);
           /* cleanup */
@@ -150,6 +157,7 @@ twitch_plugin_read (TwitchPlugin *twitch)
 
   twitch->api->user.name = g_strdup (DEFAULT_USERNAME);
   twitch->api->client_id = g_strdup (DEFAULT_ID);
+  twitch->api->access_token = g_strdup (DEFAULT_TOKEN);
   gdk_rgba_parse (&twitch->color, TWITCH_PURPLE);
 }
 

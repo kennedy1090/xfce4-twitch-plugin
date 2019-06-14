@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 typedef struct {
     GtkWidget   *username;
     GtkWidget   *client_id;
+    GtkWidget   *access_token;
     GtkWidget   *color_picker;
 } DialogSettings;
 /* plugin structure */

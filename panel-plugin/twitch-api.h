@@ -22,6 +22,7 @@ typedef struct {
 typedef struct {
     CURL *curl;
     gchar *client_id;
+    gchar *access_token;
     TwitchUser user;
     GHashTable *following;
     gsize follow_size;

@@ -54,8 +54,11 @@ twitch_plugin_configure_response (GtkWidget    *dialog,
     {
       if(response == GTK_RESPONSE_APPLY) {
         twitch_free_user(&twitch->api->user);
+
         twitch->api->user.name = g_strdup(gtk_entry_get_text(GTK_ENTRY(twitch->settings->username)));
         twitch->api->client_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(twitch->settings->client_id)));
+        twitch->api->access_token = g_strdup(gtk_entry_get_text(GTK_ENTRY(twitch->settings->access_token)));
+
         gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(twitch->settings->color_picker), &twitch->color);
         twitch_load_user(twitch->api);
         twitch_plugin_update(twitch);
@@ -108,9 +111,11 @@ twitch_plugin_configure (XfcePanelPlugin *plugin,
   gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), grid, FALSE, FALSE, 0);
   twitch->settings->username = gtk_entry_new();
   twitch->settings->client_id = gtk_entry_new();
+  twitch->settings->access_token = gtk_entry_new();
   twitch->settings->color_picker = gtk_color_button_new();
   gtk_entry_set_text(GTK_ENTRY(twitch->settings->username), twitch->api->user.name);
   gtk_entry_set_text(GTK_ENTRY(twitch->settings->client_id), twitch->api->client_id);
+  gtk_entry_set_text(GTK_ENTRY(twitch->settings->access_token), twitch->api->client_id);
   gdk_rgba_parse(&default_color, TWITCH_PURPLE);
   gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(twitch->settings->color_picker), &default_color);
   gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(twitch->settings->color_picker), &twitch->color);
@@ -118,8 +123,11 @@ twitch_plugin_configure (XfcePanelPlugin *plugin,
   gtk_grid_attach(GTK_GRID(grid), twitch->settings->username, 1, 0, 1, 1);
   gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Client ID: ")), 0, 1, 1, 1);
   gtk_grid_attach(GTK_GRID(grid), twitch->settings->client_id, 1, 1, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Icon color: ")), 0, 2, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), twitch->settings->color_picker, 1, 2, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("OR")), 0, 2, 2, 1);
+  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Access Token: ")), 0, 3, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), twitch->settings->access_token, 1, 3, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Icon color: ")), 0, 4, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), twitch->settings->color_picker, 1, 4, 1, 1);
 
   /* link the dialog to the plugin, so we can destroy it when the plugin
    * is closed, but the dialog is still open */

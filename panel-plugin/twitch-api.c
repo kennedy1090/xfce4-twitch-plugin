@@ -49,7 +49,11 @@ static json_object* curl_fetch_json (TwitchApi *api, const gchar *url) {
     curl_easy_setopt(api->curl, CURLOPT_WRITEFUNCTION, curl_callback);
     curl_easy_setopt(api->curl, CURLOPT_WRITEDATA, &res);
     curl_easy_setopt(api->curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-    data = g_strconcat("Client-ID: ", api->client_id, NULL);
+    if(api->access_token[0] != '\0') {
+        data = g_strconcat("Authorization: Bearer ", api->access_token, NULL);
+    } else {
+        data = g_strconcat("Client-ID: ", api->client_id, NULL);
+    }
     headers = curl_slist_append(headers, data);
     curl_easy_setopt(api->curl, CURLOPT_HTTPHEADER, headers);
     if (curl_easy_perform(api->curl) != CURLE_OK) return NULL;
