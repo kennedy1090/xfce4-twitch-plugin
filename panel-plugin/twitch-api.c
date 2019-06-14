@@ -172,6 +172,7 @@ static void set_false (gpointer key, gpointer value, gpointer userdata){
 void twitch_update_status (TwitchApi *api) {
     gchar *offset, *url, *url_final;
     json_object *data, *type, *id, *json, *title;
+    json_object *error, *message;
     id_loop loop;
     TwitchUser *user;
     gsize size_total;
@@ -189,7 +190,13 @@ void twitch_update_status (TwitchApi *api) {
     g_hash_table_foreach(api->following, set_false, NULL);
     json = curl_fetch_json(api, url_final);
     if (json == NULL) return;
-    json_object_object_get_ex(json, "data", &data);
+    if(!json_object_object_get_ex(json, "data", &data)) {
+        json_object_object_get_ex(json, "error", &error);
+        json_object_object_get_ex(json, "message", &message);
+        g_error("Twitch API Error: %s", json_object_get_string(error));
+        g_error("%s", json_object_get_string(message));
+        return;
+    }
     for (gsize i = 0; i < json_object_array_length(data); i++) {
         json_object_object_get_ex(json_object_array_get_idx(data, i), "user_id", &id);
         json_object_object_get_ex(json_object_array_get_idx(data, i), "type", &type);
