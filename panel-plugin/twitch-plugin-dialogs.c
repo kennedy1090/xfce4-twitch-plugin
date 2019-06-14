@@ -33,7 +33,11 @@
 /* the website url */
 #define PLUGIN_WEBSITE ""
 
-
+inline void refresh(TwitchPlugin *twitch) {
+  twitch_load_user(twitch->api);
+  twitch_plugin_update(twitch);
+  twitch_plugin_apply_settings(twitch);
+}
 
 static void
 twitch_plugin_configure_response (GtkWidget    *dialog,
@@ -59,10 +63,11 @@ twitch_plugin_configure_response (GtkWidget    *dialog,
         twitch->api->client_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(twitch->settings->client_id)));
         twitch->api->access_token = g_strdup(gtk_entry_get_text(GTK_ENTRY(twitch->settings->access_token)));
 
+        if(g_str_has_prefix(twitch->api->access_token, "oauth:")) {
+          twitch->api->access_token += 6;
+        }
+
         gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(twitch->settings->color_picker), &twitch->color);
-        twitch_load_user(twitch->api);
-        twitch_plugin_update(twitch);
-        twitch_plugin_apply_settings(twitch);
       }
       /* remove the dialog data from the plugin */
       g_object_set_data (G_OBJECT (twitch->plugin), "dialog", NULL);
@@ -75,6 +80,8 @@ twitch_plugin_configure_response (GtkWidget    *dialog,
 
       /* destroy the properties dialog */
       gtk_widget_destroy (dialog);
+
+      refresh(twitch);
     }
 }
 
@@ -115,7 +122,8 @@ twitch_plugin_configure (XfcePanelPlugin *plugin,
   twitch->settings->color_picker = gtk_color_button_new();
   gtk_entry_set_text(GTK_ENTRY(twitch->settings->username), twitch->api->user.name);
   gtk_entry_set_text(GTK_ENTRY(twitch->settings->client_id), twitch->api->client_id);
-  gtk_entry_set_text(GTK_ENTRY(twitch->settings->access_token), twitch->api->client_id);
+  gtk_entry_set_text(GTK_ENTRY(twitch->settings->access_token), twitch->api->access_token);
+  //set briefly to TWITCH_PURPLE to try to save it in the color picker custom colors
   gdk_rgba_parse(&default_color, TWITCH_PURPLE);
   gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(twitch->settings->color_picker), &default_color);
   gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(twitch->settings->color_picker), &twitch->color);
