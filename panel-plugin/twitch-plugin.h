@@ -42,12 +42,14 @@ typedef struct
     GtkWidget       *icon;
     GHashTable      *buttons;
     int size;
+
+    guint update_status_rate;
+    guint update_users_rate;
     
     GtkCssProvider  *provider;
     GdkRGBA         color;
 
     TwitchApi       *api;
-    gboolean        init_complete;
     DialogSettings  *settings;
 }
 TwitchPlugin;
@@ -59,7 +61,10 @@ twitch_plugin_save (XfcePanelPlugin *plugin,
              TwitchPlugin    *twitch);
 
 gboolean
-twitch_plugin_update (gpointer userdata);
+twitch_plugin_update_status (gpointer userdata);
+
+gboolean
+twitch_plugin_update_users (gpointer userdata);
 
 void
 twitch_plugin_apply_settings (TwitchPlugin *twitch);

@@ -35,6 +35,8 @@
 #define DEFAULT_USERNAME ""
 #define DEFAULT_ID ""
 #define DEFAULT_TOKEN ""
+#define UPDATE_STATUS_SECONDS 60
+#define UPDATE_USERS_SECONDS 1800
 
 #define IS_HORIZ(twitch) xfce_panel_plugin_get_orientation(twitch->plugin) == GTK_ORIENTATION_HORIZONTAL
 #define SIZE(twitch) xfce_panel_plugin_get_size(twitch->plugin)
@@ -182,7 +184,7 @@ twitch_plugin_new (XfcePanelPlugin *plugin)
   twitch_plugin_read (twitch);
   twitch->provider = gtk_css_provider_new();
   twitch_plugin_apply_settings(twitch);
-  twitch->init_complete = twitch_init(twitch->api) == 0;
+  twitch->api->init_complete = twitch_init(twitch->api);
 
   /* create some panel widgets */
   twitch->ebox = gtk_event_box_new ();
@@ -202,21 +204,22 @@ twitch_plugin_new (XfcePanelPlugin *plugin)
   gtk_box_pack_start(GTK_BOX(twitch->hvbox), twitch->icon, FALSE, FALSE, 5);
   gtk_widget_show_all(twitch->hvbox);
 
-  g_timeout_add_seconds(60, twitch_plugin_update, twitch);
+  g_timeout_add_seconds(UPDATE_STATUS_SECONDS, twitch_plugin_update_status, twitch);
+  g_timeout_add_seconds(UPDATE_USERS_SECONDS, twitch_plugin_update_users, twitch);
 
   return twitch;
 }
-gboolean
-twitch_plugin_update (gpointer userdata)
-{
+
+gboolean twitch_plugin_update_users(gpointer userdata) {
   TwitchPlugin *twitch = userdata;
-  if (!twitch->init_complete) {
-    twitch->init_complete = twitch_init(twitch->api);
-  }
-  if (twitch->init_complete) {
-    twitch_update_status(twitch->api);
-    g_hash_table_foreach(twitch->api->following, check_button, twitch);
-  }
+  twitch_update_users(twitch->api);
+  return TRUE;
+}
+
+gboolean twitch_plugin_update_status(gpointer userdata) {
+  TwitchPlugin *twitch = userdata;
+  twitch_update_status(twitch->api);
+  g_hash_table_foreach(twitch->api->following, check_button, twitch);
   return TRUE;
 }
 
@@ -277,7 +280,8 @@ twitch_plugin_size_changed (XfcePanelPlugin *plugin,
   orientation = xfce_panel_plugin_get_orientation (plugin);
   gtk_container_set_border_width(GTK_CONTAINER(twitch->hvbox), 0);
   twitch->size = ICON_SIZE(twitch);
-  twitch_plugin_update(twitch);
+  twitch_plugin_update_status
+(twitch);
   // create_grid_layout(twitch);
   g_hash_table_foreach(twitch->buttons, update_button, twitch);
 
@@ -381,11 +385,11 @@ static void update_button_status(TwitchPlugin *twitch, TwitchUser *user) {
 static void check_button(gpointer key, gpointer value, gpointer userdata) {
   TwitchPlugin *twitch = (TwitchPlugin*)userdata;
   TwitchUser *user = (TwitchUser*)value;
-  gboolean b1 = g_hash_table_lookup_extended(twitch->buttons, key, NULL, NULL);
-  if (b1) {
+  if (g_hash_table_lookup_extended(twitch->buttons, key, NULL, NULL)) {
     update_button_status(twitch, user);
     if (user->update_pfp) {
       update_button_img(twitch, user);
+      user->update_pfp = FALSE;
     }
     if (!user->live) {
       remove_button(twitch, user);

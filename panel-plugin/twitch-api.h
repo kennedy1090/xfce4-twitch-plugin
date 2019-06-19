@@ -21,6 +21,7 @@ typedef struct {
 
 typedef struct {
     CURL *curl;
+    gboolean init_complete;
     gchar *client_id;
     gchar *access_token;
     TwitchUser user;
@@ -28,13 +29,16 @@ typedef struct {
     gsize follow_size;
 } TwitchApi;
 
-int
+gboolean
 twitch_init (TwitchApi *api);
 
-void
+gboolean
 twitch_update_status (TwitchApi *api);
 
-int 
+gboolean
+twitch_update_users (TwitchApi *api);
+
+gboolean 
 twitch_load_user (TwitchApi *api);
 
 void

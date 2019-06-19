@@ -34,9 +34,9 @@
 #define PLUGIN_WEBSITE ""
 
 inline void refresh(TwitchPlugin *twitch) {
-  twitch_load_user(twitch->api);
-  twitch_plugin_update(twitch);
   twitch_plugin_apply_settings(twitch);
+  twitch_plugin_update_status(twitch);
+  twitch_plugin_update_users(twitch);
 }
 
 static void
