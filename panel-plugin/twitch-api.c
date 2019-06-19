@@ -102,9 +102,8 @@ static gboolean twitch_init_user_id (TwitchApi* api) {
 static gboolean twitch_update_following (TwitchApi* api) {
     json_object *total, *data, *to_id, *to_name, *json, *user, *pagination, *cursor = NULL;
     TwitchUser *tw_user;
-    int count;
-    gchar *after = "", *url;
-    gchar *url_base = g_strconcat(TWITCH_API_FOLLOWING, "?from_id=", api->user.id, "&first=100", NULL);
+    gsize count;
+    gchar *url, *url_base = g_strconcat(TWITCH_API_FOLLOWING, "?from_id=", api->user.id, "&first=100", NULL);
     g_hash_table_remove_all(api->following);
     api->follow_size = 0;
     do {
