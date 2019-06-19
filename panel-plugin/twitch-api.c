@@ -177,8 +177,8 @@ static gboolean twitch_update_user_data(TwitchApi *api) {
         if (g_strcmp0(user->pfp_url, pfp_temp) != 0) {
             if (user->pfp_url) g_free(user->pfp_url);
             if (user->pfp) g_object_unref(G_OBJECT(user->pfp));
-            user->pfp_url = g_str_equal(pfp_temp, "")? TWITCH_PFP_DEFAULT : g_strdup(pfp_temp);
-            user->pfp = curl_read_image(api, user->pfp_url);
+            user->pfp_url = g_strdup(pfp_temp);
+            user->pfp = curl_read_image(api, user->pfp_url[0]? user->pfp_url : TWITCH_PFP_DEFAULT);
             user->update_pfp = TRUE;
         }
     }
@@ -254,6 +254,7 @@ gboolean twitch_update_status (TwitchApi *api) {
 void twitch_free_user(gpointer data) {
     TwitchUser *user = data;
     if (user->pfp_url)
+        g_message("%s\n", user->pfp_url);
         g_free(user->pfp_url);
     
     if (user->pfp)
