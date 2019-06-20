@@ -3,8 +3,8 @@
 #include <glib.h>
 #include <curl/curl.h>
 
-#define TWITCH_CAN_INIT(api) (api->curl && api->user.name != NULL && api->client_id != NULL \
-            && strlen(api->user.name) != 0 && strlen(api->client_id) != 0)
+#define TWITCH_CAN_INIT(api) (api->curl && api->user.name && (api->client_id || api->access_token) \
+            && api->user.name[0] && api->client_id[0] && api->access_token[0])
 
 G_BEGIN_DECLS
 typedef struct {
@@ -16,7 +16,7 @@ typedef struct {
     GdkPixbuf   *pfp;
     gboolean    live;
     gboolean    update_pfp;
-    //TODO: maybe add GtkButton here
+    gboolean    to_remove;
 } TwitchUser;
 
 typedef struct {

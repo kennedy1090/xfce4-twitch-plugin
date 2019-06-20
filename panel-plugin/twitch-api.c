@@ -99,13 +99,16 @@ static gboolean twitch_init_user_id (TwitchApi* api) {
     g_free(url);
     return TRUE;
 }
+static void set_remove(gpointer key, gpointer value, gpointer userdata) {
+    ((TwitchUser*)value)->to_remove = TRUE;
+}
 static gboolean twitch_update_following (TwitchApi* api) {
     json_object *total, *data, *to_id, *to_name, *json, *user, *pagination, *cursor = NULL;
     TwitchUser *tw_user;
     gsize count;
     gchar *url, *url_base = g_strconcat(TWITCH_API_FOLLOWING, "?from_id=", api->user.id, "&first=100", NULL);
-    g_hash_table_remove_all(api->following);
     api->follow_size = 0;
+    g_hash_table_foreach(api->following, set_remove, NULL);
     do {
         if(cursor) {
             url = g_strconcat(url_base, "&after=", json_object_get_string(cursor), NULL);
@@ -122,10 +125,14 @@ static gboolean twitch_update_following (TwitchApi* api) {
             user = json_object_array_get_idx(data, i);
             json_object_object_get_ex(user, "to_id", &to_id);
             json_object_object_get_ex(user, "to_name", &to_name);
-            tw_user = g_new0(TwitchUser, 1);
-            tw_user->name = g_strdup(json_object_get_string(to_name));
-            tw_user->id = g_strdup(json_object_get_string(to_id));
-            g_hash_table_insert(api->following, tw_user->id, tw_user);
+            if (!(tw_user = g_hash_table_lookup(api->following, json_object_get_string(to_id)))) {
+                tw_user = g_new0(TwitchUser, 1);
+                tw_user->name = g_strdup(json_object_get_string(to_name));
+                tw_user->id = g_strdup(json_object_get_string(to_id));
+                g_hash_table_insert(api->following, tw_user->id, tw_user);
+            } else {
+                tw_user->to_remove = FALSE;
+            }
         }
         g_free(url);
         json_object_put(json);

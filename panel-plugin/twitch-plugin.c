@@ -385,14 +385,15 @@ static void update_button_status(TwitchPlugin *twitch, TwitchUser *user) {
 static void check_button(gpointer key, gpointer value, gpointer userdata) {
   TwitchPlugin *twitch = (TwitchPlugin*)userdata;
   TwitchUser *user = (TwitchUser*)value;
-  if (g_hash_table_lookup_extended(twitch->buttons, key, NULL, NULL)) {
+  if (g_hash_table_contains(twitch->buttons, key)) {
     update_button_status(twitch, user);
     if (user->update_pfp) {
       update_button_img(twitch, user);
       user->update_pfp = FALSE;
     }
-    if (!user->live) {
+    if (!user->live || user->to_remove) {
       remove_button(twitch, user);
+      if(user->to_remove) g_hash_table_remove(twitch->api->following, user->id);
     }
   } else if (user->live) {
     add_button(twitch, user);
