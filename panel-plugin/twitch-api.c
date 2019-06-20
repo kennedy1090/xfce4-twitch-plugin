@@ -200,7 +200,7 @@ static void set_false (gpointer key, gpointer value, gpointer userdata){
 }
 static gboolean init_complete(TwitchApi *api) {
     return api->init_complete
-        || (api->init_complete = twitch_init(api));
+        || twitch_init(api);
 }
 
 gboolean twitch_update_users(TwitchApi *api) {
@@ -261,7 +261,6 @@ gboolean twitch_update_status (TwitchApi *api) {
 void twitch_free_user(gpointer data) {
     TwitchUser *user = data;
     if (user->pfp_url)
-        g_message("%s\n", user->pfp_url);
         g_free(user->pfp_url);
     
     if (user->pfp)
@@ -270,19 +269,27 @@ void twitch_free_user(gpointer data) {
     if (user->status)
         g_free(user->status);
 
-    g_free (user->id);
-    g_free (user->name);
+    if(user->id)
+        g_free (user->id);
+
+    if(user->name)
+        g_free (user->name);
+    
+    user->id = NULL;
+    user->name = NULL;
 }
 
 gboolean twitch_init(TwitchApi *api) {
     if(!api->curl) api->curl = curl_easy_init();
-    if(!api->following) api->following = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, twitch_free_user);
-    return TWITCH_CAN_INIT(api)
+    g_message("%p", api->following);
+    if(api->following == NULL) api->following = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, twitch_free_user);
+    g_message("%p test\n", api->following);
+    return TWITCH_CAN_RUN(api)
         && twitch_init_user_id(api)
         && (api->init_complete = TRUE)
-        && twitch_update_users(api);
+        && twitch_update_users(api)
+        && twitch_update_status(api);
 }
-
 
 void twitch_free(TwitchApi *api) {
     if (api->client_id)

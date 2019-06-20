@@ -29,6 +29,8 @@ typedef struct {
     GtkWidget   *client_id;
     GtkWidget   *access_token;
     GtkWidget   *color_picker;
+    GtkWidget   *update_users;
+    GtkWidget   *update_status;
 } DialogSettings;
 /* plugin structure */
 typedef struct
@@ -43,8 +45,8 @@ typedef struct
     GHashTable      *buttons;
     int size;
 
-    guint update_status_rate;
-    guint update_users_rate;
+    guint           update_status_rate;
+    guint           update_users_rate;
     
     GtkCssProvider  *provider;
     GdkRGBA         color;

@@ -146,6 +146,11 @@ twitch_plugin_read (TwitchPlugin *twitch)
 
           value = xfce_rc_read_entry (rc, "twitch-logo-color", TWITCH_PURPLE);
           gdk_rgba_parse (&twitch->color, value);
+
+          twitch->update_status_rate = xfce_rc_read_int_entry(rc, "twitch-status-refresh", UPDATE_STATUS_SECONDS);
+
+          twitch->update_users_rate = xfce_rc_read_int_entry(rc, "twitch-users-refresh", UPDATE_USERS_SECONDS);
+
           /* cleanup */
           xfce_rc_close (rc);
 
@@ -160,6 +165,8 @@ twitch_plugin_read (TwitchPlugin *twitch)
   twitch->api->user.name = g_strdup (DEFAULT_USERNAME);
   twitch->api->client_id = g_strdup (DEFAULT_ID);
   twitch->api->access_token = g_strdup (DEFAULT_TOKEN);
+  twitch->update_status_rate = UPDATE_STATUS_SECONDS;
+  twitch->update_users_rate = UPDATE_USERS_SECONDS;
   gdk_rgba_parse (&twitch->color, TWITCH_PURPLE);
 }
 
@@ -184,7 +191,7 @@ twitch_plugin_new (XfcePanelPlugin *plugin)
   twitch_plugin_read (twitch);
   twitch->provider = gtk_css_provider_new();
   twitch_plugin_apply_settings(twitch);
-  twitch->api->init_complete = twitch_init(twitch->api);
+  twitch_init(twitch->api);
 
   /* create some panel widgets */
   twitch->ebox = gtk_event_box_new ();
@@ -204,22 +211,28 @@ twitch_plugin_new (XfcePanelPlugin *plugin)
   gtk_box_pack_start(GTK_BOX(twitch->hvbox), twitch->icon, FALSE, FALSE, 5);
   gtk_widget_show_all(twitch->hvbox);
 
-  g_timeout_add_seconds(UPDATE_STATUS_SECONDS, twitch_plugin_update_status, twitch);
-  g_timeout_add_seconds(UPDATE_USERS_SECONDS, twitch_plugin_update_users, twitch);
 
+  g_timeout_add_seconds(twitch->update_status_rate, twitch_plugin_update_status, twitch);
+  g_timeout_add_seconds(twitch->update_users_rate, twitch_plugin_update_users, twitch);
+  
   return twitch;
 }
 
 gboolean twitch_plugin_update_users(gpointer userdata) {
   TwitchPlugin *twitch = userdata;
-  twitch_update_users(twitch->api);
+  if(!twitch_update_users(twitch->api)){
+    g_message("update_users threw an error");
+  }
   return TRUE;
 }
 
 gboolean twitch_plugin_update_status(gpointer userdata) {
   TwitchPlugin *twitch = userdata;
-  twitch_update_status(twitch->api);
-  g_hash_table_foreach(twitch->api->following, check_button, twitch);
+  if(twitch_update_status(twitch->api)){
+    g_hash_table_foreach(twitch->api->following, check_button, twitch);
+  } else {
+    g_message("update_status threw an error");
+  }
   return TRUE;
 }
 
@@ -280,9 +293,8 @@ twitch_plugin_size_changed (XfcePanelPlugin *plugin,
   orientation = xfce_panel_plugin_get_orientation (plugin);
   gtk_container_set_border_width(GTK_CONTAINER(twitch->hvbox), 0);
   twitch->size = ICON_SIZE(twitch);
-  twitch_plugin_update_status
-(twitch);
   // create_grid_layout(twitch);
+  twitch_plugin_update_status(twitch);
   g_hash_table_foreach(twitch->buttons, update_button, twitch);
 
   /* set the widget size */

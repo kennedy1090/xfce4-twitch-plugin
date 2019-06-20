@@ -35,8 +35,7 @@
 
 inline void refresh(TwitchPlugin *twitch) {
   twitch_plugin_apply_settings(twitch);
-  twitch_plugin_update_status(twitch);
-  twitch_plugin_update_users(twitch);
+  twitch_init(twitch->api);
 }
 
 static void
@@ -45,6 +44,7 @@ twitch_plugin_configure_response (GtkWidget    *dialog,
                            TwitchPlugin *twitch)
 {
   gboolean result;
+  DialogSettings *settings = twitch->settings;
 
   if (response == GTK_RESPONSE_HELP)
     {
@@ -59,15 +59,19 @@ twitch_plugin_configure_response (GtkWidget    *dialog,
       if(response == GTK_RESPONSE_APPLY) {
         twitch_free_user(&twitch->api->user);
 
-        twitch->api->user.name = g_strdup(gtk_entry_get_text(GTK_ENTRY(twitch->settings->username)));
-        twitch->api->client_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(twitch->settings->client_id)));
-        twitch->api->access_token = g_strdup(gtk_entry_get_text(GTK_ENTRY(twitch->settings->access_token)));
+        twitch->api->user.name = g_strdup(gtk_entry_get_text(GTK_ENTRY(settings->username)));
+        if(twitch->api->client_id) g_free(twitch->api->client_id);
+        twitch->api->client_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(settings->client_id)));
+        if(twitch->api->access_token) g_free(twitch->api->access_token);
+        twitch->api->access_token = g_strdup(gtk_entry_get_text(GTK_ENTRY(settings->access_token)));
+        twitch->update_status_rate = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(settings->update_status));
+        twitch->update_users_rate = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(settings->update_users)) * 60;
 
         if(g_str_has_prefix(twitch->api->access_token, "oauth:")) {
           twitch->api->access_token += 6;
         }
 
-        gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(twitch->settings->color_picker), &twitch->color);
+        gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(settings->color_picker), &twitch->color);
       }
       /* remove the dialog data from the plugin */
       g_object_set_data (G_OBJECT (twitch->plugin), "dialog", NULL);
@@ -81,7 +85,7 @@ twitch_plugin_configure_response (GtkWidget    *dialog,
       /* destroy the properties dialog */
       gtk_widget_destroy (dialog);
 
-      refresh(twitch);
+      if(response == GTK_RESPONSE_APPLY) refresh(twitch);
     }
 }
 
@@ -93,7 +97,8 @@ twitch_plugin_configure (XfcePanelPlugin *plugin,
 {
   GtkWidget *dialog, *grid;
   GdkRGBA default_color;
-  twitch->settings = g_new0(DialogSettings, 1);
+  DialogSettings *settings = g_new0(DialogSettings, 1);
+  twitch->settings = settings;
 
   /* block the plugin menu */
   xfce_panel_plugin_block_menu (plugin);
@@ -116,26 +121,37 @@ twitch_plugin_configure (XfcePanelPlugin *plugin,
   /* add widgets */
   grid = gtk_grid_new();
   gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), grid, FALSE, FALSE, 0);
-  twitch->settings->username = gtk_entry_new();
-  twitch->settings->client_id = gtk_entry_new();
-  twitch->settings->access_token = gtk_entry_new();
-  twitch->settings->color_picker = gtk_color_button_new();
-  gtk_entry_set_text(GTK_ENTRY(twitch->settings->username), twitch->api->user.name);
-  gtk_entry_set_text(GTK_ENTRY(twitch->settings->client_id), twitch->api->client_id);
-  gtk_entry_set_text(GTK_ENTRY(twitch->settings->access_token), twitch->api->access_token);
+  settings->username = gtk_entry_new();
+  settings->client_id = gtk_entry_new();
+  settings->access_token = gtk_entry_new();
+  settings->color_picker = gtk_color_button_new();
+  settings->update_status = gtk_spin_button_new_with_range(0, 60*5, 10);
+  settings->update_users = gtk_spin_button_new_with_range(0, 60, 1);
+  
+  //populate with currently loaded values
+  gtk_entry_set_text(GTK_ENTRY(settings->username), twitch->api->user.name);
+  gtk_entry_set_text(GTK_ENTRY(settings->client_id), twitch->api->client_id);
+  gtk_entry_set_text(GTK_ENTRY(settings->access_token), twitch->api->access_token);
+  gtk_spin_button_set_value(GTK_SPIN_BUTTON(settings->update_status), twitch->update_status_rate);
+  gtk_spin_button_set_value(GTK_SPIN_BUTTON(settings->update_users), twitch->update_users_rate/60);
   //set briefly to TWITCH_PURPLE to try to save it in the color picker custom colors
   gdk_rgba_parse(&default_color, TWITCH_PURPLE);
-  gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(twitch->settings->color_picker), &default_color);
-  gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(twitch->settings->color_picker), &twitch->color);
+  gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(settings->color_picker), &default_color);
+  gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(settings->color_picker), &twitch->color);
+
   gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Twitch username: ")), 0, 0, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), twitch->settings->username, 1, 0, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), settings->username, 1, 0, 1, 1);
   gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Client ID: ")), 0, 1, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), twitch->settings->client_id, 1, 1, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), settings->client_id, 1, 1, 1, 1);
   gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("OR")), 0, 2, 2, 1);
   gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Access Token: ")), 0, 3, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), twitch->settings->access_token, 1, 3, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), settings->access_token, 1, 3, 1, 1);
   gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Icon color: ")), 0, 4, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), twitch->settings->color_picker, 1, 4, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), settings->color_picker, 1, 4, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Update rate (sec):")), 0, 5, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), settings->update_status, 1, 5, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Update following (min):")), 0, 6, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), settings->update_users, 1, 6, 1, 1);
 
   /* link the dialog to the plugin, so we can destroy it when the plugin
    * is closed, but the dialog is still open */
