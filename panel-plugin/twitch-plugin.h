@@ -17,8 +17,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __SAMPLE_H__
-#define __SAMPLE_H__
+#ifndef __TWITCH_H__
+#define __TWITCH_H__
 
 #define TWITCH_PURPLE "#6441a4"
 #include "twitch-api.h"
@@ -75,4 +75,4 @@ twitch_plugin_apply_settings (TwitchPlugin *twitch);
 
 G_END_DECLS
 
-#endif /* !__SAMPLE_H__ */
+#endif /* !__TWITCH_H__ */
