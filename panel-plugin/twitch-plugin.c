@@ -171,7 +171,6 @@ twitch_plugin_read (TwitchPlugin *twitch)
 }
 
 
-
 static TwitchPlugin *
 twitch_plugin_new (XfcePanelPlugin *plugin)
 {
@@ -190,8 +189,8 @@ twitch_plugin_new (XfcePanelPlugin *plugin)
   /* read the user settings */
   twitch_plugin_read (twitch);
   twitch->provider = gtk_css_provider_new();
-  twitch_plugin_apply_settings(twitch);
   twitch_init(twitch->api);
+  twitch_plugin_apply_settings(twitch);
 
   /* create some panel widgets */
   twitch->ebox = gtk_event_box_new ();
@@ -211,10 +210,6 @@ twitch_plugin_new (XfcePanelPlugin *plugin)
   gtk_box_pack_start(GTK_BOX(twitch->hvbox), twitch->icon, FALSE, FALSE, 5);
   gtk_widget_show_all(twitch->hvbox);
 
-
-  g_timeout_add_seconds(twitch->update_status_rate, twitch_plugin_update_status, twitch);
-  g_timeout_add_seconds(twitch->update_users_rate, twitch_plugin_update_users, twitch);
-  
   return twitch;
 }
 
@@ -247,9 +242,16 @@ twitch_plugin_apply_settings (TwitchPlugin *twitch) {
   );
   g_free(color);
   gtk_css_provider_load_from_data(twitch->provider, css, -1, NULL);
+
+  if(twitch->update_status_id)
+    g_source_remove(twitch->update_status_id);
+
+  if(twitch->update_users_id)
+    g_source_remove(twitch->update_users_id);
+  
+  twitch->update_status_id = g_timeout_add_seconds(twitch->update_status_rate, twitch_plugin_update_status, twitch);
+  twitch->update_users_id = g_timeout_add_seconds(twitch->update_users_rate, twitch_plugin_update_users, twitch);
 }
-
-
 
 static void
 twitch_plugin_free (XfcePanelPlugin *plugin,

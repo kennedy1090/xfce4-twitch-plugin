@@ -287,8 +287,8 @@ gboolean twitch_init(TwitchApi *api) {
     return TWITCH_CAN_RUN(api)
         && twitch_init_user_id(api)
         && (api->init_complete = TRUE)
-        && twitch_update_users(api)
-        && twitch_update_status(api);
+        && twitch_update_users(api);
+        // && twitch_update_status(api);
 }
 
 void twitch_free(TwitchApi *api) {

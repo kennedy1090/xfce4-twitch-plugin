@@ -27,7 +27,8 @@ libtwitch_plugin_la_CFLAGS = \
 	$(LIBXFCE4PANEL_CFLAGS) \
 	$(PLATFORM_CFLAGS) \
 	$(CURL_CFLAGS) \
-	$(JSONC_CFLAGS)
+	$(JSONC_CFLAGS) \
+	-g3
 
 libtwitch_plugin_la_LDFLAGS = \
        -avoid-version \

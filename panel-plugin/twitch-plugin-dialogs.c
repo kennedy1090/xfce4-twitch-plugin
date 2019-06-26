@@ -36,6 +36,7 @@
 inline void refresh(TwitchPlugin *twitch) {
   twitch_plugin_apply_settings(twitch);
   twitch_init(twitch->api);
+  twitch_plugin_update_status(twitch);
 }
 
 static void

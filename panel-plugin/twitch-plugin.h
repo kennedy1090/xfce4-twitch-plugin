@@ -45,6 +45,8 @@ typedef struct
     GHashTable      *buttons;
     int size;
 
+    guint           update_status_id;
+    guint           update_users_id;
     guint           update_status_rate;
     guint           update_users_rate;
     
