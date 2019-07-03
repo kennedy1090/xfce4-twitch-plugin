@@ -81,6 +81,20 @@ static GdkPixbuf* curl_read_image(TwitchApi* api, gchar *url) {
     g_object_unref(G_OBJECT(loader));
     return pixbuf;
 }
+static gboolean twitch_verify_response(json_object *json) {
+    if (!json) {
+        g_error("Invalid JSON object");
+        return FALSE;
+    }
+    if(!json_object_object_get_ex(json, "data", &data)) {
+        json_object_object_get_ex(json, "error", &error);
+        json_object_object_get_ex(json, "message", &message);
+        g_error("Twitch API Error: %s", json_object_get_string(error));
+        g_error("%s", json_object_get_string(message));
+        return FALSE;
+    }
+    return TRUE;
+}
 
 //assumes user->name exists
 static gboolean twitch_init_user_id (TwitchApi* api) {
@@ -89,7 +103,7 @@ static gboolean twitch_init_user_id (TwitchApi* api) {
     const gchar *id_c;
     url = g_strconcat(TWITCH_API_USERS, "?login=", api->user.name, NULL);
     json = curl_fetch_json(api, url);
-    if (json == NULL) return FALSE;
+    if(!twitch_verify_response(json)) return FALSE;
     json_object_object_get_ex(json, "data", &data);
     user = json_object_array_get_idx(data, 0);
     json_object_object_get_ex(user, "id", &id);
@@ -114,7 +128,7 @@ static gboolean twitch_update_following (TwitchApi* api) {
             url = g_strconcat(url_base, "&after=", json_object_get_string(cursor), NULL);
         } else url = g_strdup(url_base);
         json = curl_fetch_json(api, url);
-        if (json == NULL) return FALSE;
+        if(!twitch_verify_response(json)) return FALSE;
         json_object_object_get_ex(json, "total", &total);
         json_object_object_get_ex(json, "data", &data);
         json_object_object_get_ex(json, "pagination", &pagination);
@@ -168,7 +182,7 @@ static gboolean twitch_update_user_data(TwitchApi *api) {
     loop.prefix = prefix;
     g_hash_table_foreach(api->following, copy_ids, &loop);
     json = curl_fetch_json(api, url_final);
-    if(!json || !json_object_object_get_ex(json, "data", &data)) return FALSE;
+    if(!twitch_verify_response(json)) return FALSE;
     for (gsize i = 0; i < json_object_array_length(data); i++) {
         json_object_object_get_ex(json_object_array_get_idx(data, i), "profile_image_url", &pfp);
         json_object_object_get_ex(json_object_array_get_idx(data, i), "id", &id);
@@ -230,14 +244,7 @@ gboolean twitch_update_status (TwitchApi *api) {
     g_hash_table_foreach(api->following, copy_ids, &loop);
     g_hash_table_foreach(api->following, set_false, NULL);
     json = curl_fetch_json(api, url_final);
-    if (!json) return FALSE;
-    if(!json_object_object_get_ex(json, "data", &data)) {
-        json_object_object_get_ex(json, "error", &error);
-        json_object_object_get_ex(json, "message", &message);
-        g_error("Twitch API Error: %s", json_object_get_string(error));
-        g_error("%s", json_object_get_string(message));
-        return FALSE;
-    }
+    if(!twitch_verify_response(json)) return FALSE;
     for (gsize i = 0; i < json_object_array_length(data); i++) {
         json_object_object_get_ex(json_object_array_get_idx(data, i), "user_id", &id);
         json_object_object_get_ex(json_object_array_get_idx(data, i), "type", &type);
