@@ -84,19 +84,18 @@ static GdkPixbuf* curl_read_image(TwitchApi* api, gchar *url) {
 static gboolean twitch_get_data(json_object *json, json_object **data) {
     json_object *error, *message;
     if (!json) {
-        g_error("Invalid JSON object");
+        g_warning("Invalid JSON object");
         return FALSE;
     }
     if(!json_object_object_get_ex(json, "data", data)) {
         json_object_object_get_ex(json, "error", &error);
         json_object_object_get_ex(json, "message", &message);
-        g_error("Twitch API Error: %s", json_object_get_string(error));
-        g_error("%s", json_object_get_string(message));
+        g_warning("Twitch API Error: %s", json_object_get_string(error));
+        g_warning("%s", json_object_get_string(message));
         return FALSE;
     }
     return TRUE;
 }
-
 //assumes user->name exists
 static gboolean twitch_init_user_id (TwitchApi* api) {
     json_object *data, *id, *user, *json;
