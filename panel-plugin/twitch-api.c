@@ -32,13 +32,13 @@ static size_t curl_callback (void *contents, size_t size, size_t num, void *user
 
     res->size += fullsize;
     res->data[res->size] = 0;
-    
+
     return fullsize;
 }
 
 static json_object* curl_fetch_json (TwitchApi *api, const gchar *url) {
     api_result res;
-    gchar *data;
+    gchar *access_token, *client_id;
     json_object *obj;
     struct curl_slist *headers = NULL;
     res.data = calloc(1, sizeof(res.data));
@@ -48,17 +48,16 @@ static json_object* curl_fetch_json (TwitchApi *api, const gchar *url) {
     curl_easy_setopt(api->curl, CURLOPT_WRITEFUNCTION, curl_callback);
     curl_easy_setopt(api->curl, CURLOPT_WRITEDATA, &res);
     curl_easy_setopt(api->curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-    if(api->access_token[0] != '\0') {
-        data = g_strconcat("Authorization: Bearer ", api->access_token, NULL);
-    } else {
-        data = g_strconcat("Client-ID: ", api->client_id, NULL);
-    }
-    headers = curl_slist_append(headers, data);
+    access_token = g_strconcat("Authorization: Bearer ", api->access_token, NULL);
+    client_id = g_strconcat("Client-ID: ", api->client_id, NULL);
+    headers = curl_slist_append(headers, access_token);
+    headers = curl_slist_append(headers, client_id);
     curl_easy_setopt(api->curl, CURLOPT_HTTPHEADER, headers);
     if (curl_easy_perform(api->curl) != CURLE_OK) return NULL;
     obj = json_tokener_parse(res.data);
     free(res.data);
-    g_free(data);
+    g_free(access_token);
+    g_free(client_id);
     return obj;
 }
 static size_t img_read_buf(void *data, size_t size, size_t num, void* user) {

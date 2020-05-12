@@ -96,7 +96,7 @@ void
 twitch_plugin_configure (XfcePanelPlugin *plugin,
                   TwitchPlugin    *twitch)
 {
-  GtkWidget *dialog, *grid;
+  GtkWidget *dialog, *grid, *token_link;
   GdkRGBA default_color;
   DialogSettings *settings = g_new0(DialogSettings, 1);
   twitch->settings = settings;
@@ -140,19 +140,20 @@ twitch_plugin_configure (XfcePanelPlugin *plugin,
   gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(settings->color_picker), &default_color);
   gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(settings->color_picker), &twitch->color);
 
+  
+
   gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Twitch username: ")), 0, 0, 1, 1);
   gtk_grid_attach(GTK_GRID(grid), settings->username, 1, 0, 1, 1);
   gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Client ID: ")), 0, 1, 1, 1);
   gtk_grid_attach(GTK_GRID(grid), settings->client_id, 1, 1, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("OR")), 0, 2, 2, 1);
-  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Access Token: ")), 0, 3, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), settings->access_token, 1, 3, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Icon color: ")), 0, 4, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), settings->color_picker, 1, 4, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Update rate (sec):")), 0, 5, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), settings->update_status, 1, 5, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Update following (min):")), 0, 6, 1, 1);
-  gtk_grid_attach(GTK_GRID(grid), settings->update_users, 1, 6, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Access Token: ")), 0, 2, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), settings->access_token, 1, 2, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Icon color: ")), 0, 3, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), settings->color_picker, 1, 3, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Update rate (sec):")), 0, 4, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), settings->update_status, 1, 4, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(_("Update following (min):")), 0, 5, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), settings->update_users, 1, 5, 1, 1);
 
   /* link the dialog to the plugin, so we can destroy it when the plugin
    * is closed, but the dialog is still open */
@@ -189,7 +190,7 @@ twitch_plugin_about (XfcePanelPlugin *plugin)
                          "program-name", PACKAGE_NAME,
                          "comments",     _("Twitch following plugin"),
                          "website",      PLUGIN_WEBSITE,
-                         "copyright",    _("Copyright \xc2\xa9 2019-2019 Will Kennedy\n"),
+                         "copyright",    _("Copyright \xc2\xa9 2019-2020 Will Kennedy\n"),
                          "authors",      auth,
                          NULL);
 
